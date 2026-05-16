@@ -6,9 +6,9 @@
 * - stdio (local Claude Desktop): node pixie-mcp-server.js
 * - HTTP (Railway/public VPS): PORT=3000 node pixie-mcp-server.js
 */
-const { Server } = require("@modelcontextprotocol/sdk/server/index.js");
-const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
-const { CallToolRequestSchema, ListToolsRequestSchema } = require("@modelcontextprotocol/sdk/types.js");
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 // ============================================================
 // CONFIG
 // ============================================================
@@ -249,7 +249,7 @@ async function main() {
 const PORT = process.env.PORT;
 if (PORT) {
 // HTTP mode for Railway/public deployment
-const http = require("http");
+import http from "http";
 const httpServer = http.createServer((req, res) => {
 const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
 if (req.method === "GET") {
@@ -308,4 +308,4 @@ console.error("Pixie Vacations MCP Server running — stdio mode");
 
 }
 }
-main().catch(e => { console.error(e); process.exit(1); });
+await main().catch(e => { console.error(e); process.exit(1); });
