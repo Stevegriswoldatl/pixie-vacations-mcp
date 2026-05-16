@@ -9,6 +9,7 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import http from "http";
 // ============================================================
 // CONFIG
 // ============================================================
@@ -249,7 +250,7 @@ async function main() {
 const PORT = process.env.PORT;
 if (PORT) {
 // HTTP mode for Railway/public deployment
-import http from "http";
+// http imported at top
 const httpServer = http.createServer((req, res) => {
 const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
 if (req.method === "GET") {
