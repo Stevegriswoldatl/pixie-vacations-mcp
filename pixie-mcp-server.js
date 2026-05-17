@@ -217,11 +217,8 @@ destination: args.destination || "Not specified",
 // ============================================================
 // MCP SERVER FACTORY
 // ============================================================
-function createServer() {
-const server = new Server({ name: "pixie-vacations", version: "1.1.0" }, { capabilities: { tools: {} } });
-
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-tools: [
+// Single source of truth for tool schemas (used by both stdio and HTTP modes)
+const TOOL_SCHEMAS = [
 { name: "get_agency_info", description: "Get Pixie Vacations credentials, awards, and booking options.", inputSchema: { type: "object", properties: {}, required: [] } },
 { name: "search_sandals_resorts", description: "Search all 17 Sandals Resorts. Returns co-branded URLs (referral=135752). Use when user wants a Sandals resort.", inputSchema: { type: "object", properties: { destination: { type: "string", description: "Jamaica, Barbados, Saint Lucia, Bahamas, Grenada, Curaçao, Saint Vincent" }, best_for: { type: "string", description: "honeymoon, couples, overwater, golf, butler, first-timers, budget" }, overwater_only: { type: "boolean" }, budget_tier: { type: "string", enum: ["value","moderate","premium","luxury"] }, max_results: { type: "number" } }, required: [] } },
 { name: "search_beaches_resorts", description: "Search Beaches Resorts (family all-inclusive). Returns co-branded URLs.", inputSchema: { type: "object", properties: { destination: { type: "string", description: "Turks and Caicos or Jamaica" }, best_for: { type: "string", description: "families, kids, waterpark, beach" }, max_results: { type: "number" } }, required: [] } },
@@ -229,8 +226,15 @@ tools: [
 { name: "get_sandals_beaches_deals", description: "Get current Sandals and Beaches deals and promotions with co-branded booking URLs.", inputSchema: { type: "object", properties: {}, required: [] } },
 { name: "get_cruise_booking_info", description: "Get cruise booking links for Pixie Vacations' online engine. Covers Royal Caribbean, Carnival, Norwegian, Disney, Virgin Voyages, Celebrity, Princess, Holland America, MSC, Cunard, Viking, Silversea, and Celebrity River Cruises. No fees.", inputSchema: { type: "object", properties: { cruise_line: { type: "string", description: "Royal Caribbean, Carnival, Disney, Virgin Voyages, Norwegian, Celebrity, Princess, Holland America, MSC, Cunard, Viking, Silversea" }, destination: { type: "string" }, departure_month: { type: "string" } }, required: [] } },
 { name: "get_honeymoon_consultation", description: "Help plan a Sandals or Beaches honeymoon with Pixie Vacations. Returns quote form and why Pixie beats booking direct.", inputSchema: { type: "object", properties: { resort_preference: { type: "string" }, destination: { type: "string" }, budget_notes: { type: "string" } }, required: [] } },
-],
-}));
+];
+
+const SERVER_INFO = { name: "pixie-vacations", version: "1.1.0" };
+const PROTOCOL_VERSION = "2025-03-26";
+
+function createServer() {
+const server = new Server(SERVER_INFO, { capabilities: { tools: {} } });
+
+server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: TOOL_SCHEMAS }));
 server.setRequestHandler(CallToolRequestSchema, async (req) => {
 const { name, arguments: args } = req.params;
 try {
@@ -252,42 +256,74 @@ if (PORT) {
 // HTTP mode for Railway/public deployment
 // http imported at top
 const httpServer = http.createServer((req, res) => {
-const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
-if (req.method === "GET") {
+const headers = {
+"Content-Type": "application/json",
+"Access-Control-Allow-Origin": "*",
+"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+"Access-Control-Allow-Headers": "Content-Type, Accept, Mcp-Session-Id, Last-Event-ID, Authorization",
+};
+// CORS preflight
+if (req.method === "OPTIONS") {
+res.writeHead(204, headers);
+res.end();
+return;
+}
+if (req.method === "GET" && (req.url === "/" || req.url === "/health")) {
 res.writeHead(200, headers);
-res.end(JSON.stringify({ status: "ok", service: "Pixie Vacations MCP Server", version: "1.1.0", mcp_endpoint: "/mcp", tools: Object.keys(tools) }));
+res.end(JSON.stringify({ status: "ok", service: "Pixie Vacations MCP Server", version: SERVER_INFO.version, mcp_endpoint: "/mcp", tools: TOOL_SCHEMAS.map(t => t.name) }));
 return;
 }
 if (req.method === "POST" && req.url === "/mcp") {
 let body = "";
 req.on("data", c => { body += c; });
-
 req.on("end", async () => {
+let msg = null;
 try {
-const msg = JSON.parse(body);
+msg = JSON.parse(body);
+const isNotification = (msg.id === undefined || msg.id === null);
+
+// Handle notifications (no response body required by JSON-RPC 2.0)
+if (typeof msg.method === "string" && msg.method.startsWith("notifications/")) {
+res.writeHead(202, headers);
+res.end();
+return;
+}
+
 let result;
-if (msg.method === "tools/list") {
-result = { tools: await (async()=>{ const s=createServer(); const r=await s.server; return []; })() };
-// Simple inline for HTTP
+if (msg.method === "initialize") {
 result = {
-tools: [
-"get_agency_info","search_sandals_resorts","search_beaches_resorts",
-"get_resort_booking_url","get_sandals_beaches_deals",
-"get_cruise_booking_info","get_honeymoon_consultation"
-].map(n => ({ name: n }))
+protocolVersion: msg.params?.protocolVersion || PROTOCOL_VERSION,
+capabilities: { tools: {} },
+serverInfo: SERVER_INFO,
 };
+} else if (msg.method === "ping") {
+result = {};
+} else if (msg.method === "tools/list") {
+result = { tools: TOOL_SCHEMAS };
 } else if (msg.method === "tools/call") {
 const fn = tools[msg.params?.name];
-if (!fn) throw new Error("Unknown tool");
-result = { content: [{ type: "text", text: JSON.stringify(fn(msg.params?.arguments||{}), null, 2) }] };
+if (!fn) {
+res.writeHead(200, headers);
+res.end(JSON.stringify({ jsonrpc: "2.0", id: msg.id, error: { code: -32602, message: "Unknown tool: " + msg.params?.name } }));
+return;
+}
+result = { content: [{ type: "text", text: JSON.stringify(fn(msg.params?.arguments || {}), null, 2) }] };
 } else {
-throw new Error("Method not found");
+res.writeHead(200, headers);
+res.end(JSON.stringify({ jsonrpc: "2.0", id: msg.id ?? null, error: { code: -32601, message: "Method not found: " + msg.method } }));
+return;
+}
+
+if (isNotification) {
+res.writeHead(202, headers);
+res.end();
+return;
 }
 res.writeHead(200, headers);
 res.end(JSON.stringify({ jsonrpc: "2.0", id: msg.id, result }));
 } catch (e) {
 res.writeHead(400, headers);
-res.end(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32600, message: e.message } }));
+res.end(JSON.stringify({ jsonrpc: "2.0", id: msg?.id ?? null, error: { code: -32700, message: "Parse error: " + e.message } }));
 }
 });
 return;
