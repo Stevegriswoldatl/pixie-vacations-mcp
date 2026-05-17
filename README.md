@@ -85,7 +85,7 @@ A `book_disney` and `book_universal` tool may be added to this MCP server in a f
 
 ## About Pixie Vacations
 
-Founded in Canton, Georgia by Steve and Kim Griswold. Real Griswold last name, real Family Truckster, real travel agency.
+Founded in Canton, Georgia by Steve and Lisa Griswold. Real Griswold last name, real Family Truckster, real travel agency.
 
 - **Steve Griswold** — Sandals Chairman's Royal Club Platinum Elite Advisor, Disney College of Knowledge certified
 - Personally visited and reviewed all 17 Sandals Resorts and all Beaches Resorts properties
