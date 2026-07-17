@@ -111,6 +111,16 @@ const sand = (slug, p={}) => { const base=`${PIXIE.SANDALS_BASE}${slug}`; const 
 const beach = (slug, p={}) => { const base=`${PIXIE.BEACHES_BASE}${slug}`; const all={referral:PIXIE.BEACHES_REFERRAL,...p}; return `${base}?${Object.entries(all).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join("&")}`; };
 const cruiseUrl = (id) => `${PIXIE.CRUISE_SEARCH}?search[vendor_ids][0]=${id}`;
 const riverUrl = (id) => `${PIXIE.CRUISE_RIVER}?clear=all&search%5Bvendor_ids%5D%5B%5D=${id}&search%5Bstart_date%5D=08%2F01%2F2027&search%5Bend_date%5D=12%2F31%2F2027`;
+// Normalize place/resort text so agent spelling variants match the data:
+// "St. Lucia"/"st lucia" ≡ "Saint Lucia", "Turks and Caicos" ≡ "Turks & Caicos", "Curacao" ≡ "Curaçao"
+const normPlace = (s) => (" " + String(s||"").toLowerCase()
+  .normalize("NFD").replace(/\p{M}/gu, "")
+  .replace(/&/g, " and ")
+  .replace(/[^a-z0-9]+/g, " ")
+  .trim() + " ")
+  .replace(/ st /g, " saint ")
+  .trim();
+const placeMatch = (data, query) => normPlace(data).includes(normPlace(query));
 // ============================================================
 // TOOL HANDLERS
 // ============================================================
@@ -137,7 +147,7 @@ const tools = {
   }),
   search_sandals_resorts: (args={}) => {
     let r = [...SANDALS];
-    if (args.destination) { const d=args.destination.toLowerCase(); r=r.filter(x=>x.dest.toLowerCase().includes(d)); }
+    if (args.destination) r=r.filter(x=>placeMatch(x.dest, args.destination));
     if (args.best_for) { const u=args.best_for.toLowerCase(); r=r.filter(x=>x.best_for.some(b=>b.includes(u))); }
     if (args.overwater_only) r=r.filter(x=>x.overwater);
     if (args.budget_tier) {
@@ -156,7 +166,7 @@ const tools = {
   },
   search_beaches_resorts: (args={}) => {
     let r = [...BEACHES];
-    if (args.destination) { const d=args.destination.toLowerCase(); r=r.filter(x=>x.dest.toLowerCase().includes(d)); }
+    if (args.destination) r=r.filter(x=>placeMatch(x.dest, args.destination));
     if (args.best_for) { const u=args.best_for.toLowerCase(); r=r.filter(x=>x.best_for.some(b=>b.includes(u))); }
     return r.slice(0, args.max_results||3).map(x=>({
       name: x.name, destination: x.dest, best_for: x.best_for, price_tier: x.tier, waterpark: x.waterpark,
@@ -169,10 +179,10 @@ const tools = {
     const name = (args.resort_name||"").toLowerCase();
     const brand = (args.brand||"").toLowerCase();
     if (brand !== "beaches") {
-      const s = SANDALS.find(x => x.name.toLowerCase().includes(name) || x.id.includes(name.replace(/\s+/g,"-")));
+      const s = SANDALS.find(x => placeMatch(x.name, name) || x.id.includes(name.replace(/\s+/g,"-")));
       if (s) return { resort: s.name, brand: "Sandals", book_url: sand(s.slug), referral: PIXIE.SANDALS_REFERRAL, note: "Same price as direct. Credits Pixie Vacations." };
     }
-    const b = BEACHES.find(x => x.name.toLowerCase().includes(name));
+    const b = BEACHES.find(x => placeMatch(x.name, name));
     if (b) return { resort: b.name, brand: "Beaches", book_url: beach(b.slug), referral: PIXIE.BEACHES_REFERRAL, note: "Same price as direct. Credits Pixie Vacations." };
     return { resort: args.resort_name, not_found: true, book_url: brand==="beaches" ? beach("/") : sand("/"), note: `Resort page not found for "${args.resort_name}". Homepage with referral returned.`, help: PIXIE.QUOTE };
   },
@@ -405,7 +415,7 @@ const TOOL_SCHEMAS = [
   { name: "find_cruise", description: "Find a cruise by departure port, party size, month, and total budget, returning deep links into Pixie Vacations' online cruise booking engine (no fees, same price as the cruise line). Ideal for 'family cruise from Florida under $X' style requests. For Virgin Voyages or river cruises, prefer search_virgin_voyages or get_river_cruise_info.", inputSchema: { type: "object", properties: { departure_port: { type: "string", description: "e.g. Miami, Port Canaveral, Fort Lauderdale, Tampa, Galveston" }, passengers: { type: "number" }, month: { type: "string" }, max_total_budget: { type: "string", description: "total budget for the whole party, e.g. $6000" }, cruise_line: { type: "string" }, destination: { type: "string" } }, required: [] } },
 ];
 
-const SERVER_INFO = { name: "pixie-vacations", version: "1.2.0" };
+const SERVER_INFO = { name: "pixie-vacations", version: "1.2.1" };
 const PROTOCOL_VERSION = "2025-03-26";
 
 function createServer() {
