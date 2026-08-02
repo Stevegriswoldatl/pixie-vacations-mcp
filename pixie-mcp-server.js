@@ -80,25 +80,28 @@ const RIVER_CRUISE_LINES = [
   { name: "Tauck River Cruises", in_engine: false, rivers: ["Danube","Rhine","Seine","Douro","Rhone"], notes: "All-inclusive escorted small-ship river cruises with Tauck Director." },
   { name: "Scenic", in_engine: false, rivers: ["Danube","Rhine","Seine","Douro","Bordeaux"], notes: "Space-Ships with butler service in every suite, all-inclusive." },
 ];
+// Sandals uses SHORT root slugs (e.g. /negril/). The old /resorts/<country>/<long-name>/ format was RETIRED and now 404s.
+// Verified live against sandals.com 2026-07-22 (sandals.com's own nav/links use these short slugs). See Pixie-Sandals-Beaches-Cobrand-URL-Reference.md.
 const SANDALS = [
-  { id: "royal-barbados", name: "Sandals Royal Barbados", dest: "Barbados", slug: "/resorts/barbados/sandals-royal-barbados-beach-golf-spa-resort/", best_for: ["couples","honeymoon","golfers","luxury"], tier: "premium", overwater: false, butler: true },
-  { id: "barbados", name: "Sandals Barbados", dest: "Barbados", slug: "/resorts/barbados/sandals-barbados-resort-beach-all-inclusive/", best_for: ["couples","honeymoon","divers"], tier: "moderate", overwater: false, butler: true },
-  { id: "grande-st-lucian", name: "Sandals Grande St. Lucian", dest: "Saint Lucia", slug: "/resorts/st-lucia/sandals-grande-st-lucian-spa-beach-resort/", best_for: ["honeymoon","anniversary","romance","overwater"], tier: "luxury", overwater: true, butler: true },
-  { id: "halcyon-beach", name: "Sandals Halcyon Beach", dest: "Saint Lucia", slug: "/resorts/st-lucia/sandals-halcyon-beach-st-lucia/", best_for: ["couples","first-timers","budget"], tier: "value", overwater: false, butler: false },
-  { id: "regency-la-toc", name: "Sandals Regency La Toc", dest: "Saint Lucia", slug: "/resorts/st-lucia/sandals-regency-la-toc-golf-resort-and-spa/", best_for: ["couples","golfers","privacy","villas"], tier: "premium", overwater: false, butler: true },
-  { id: "royal-plantation", name: "Sandals Royal Plantation", dest: "Jamaica", slug: "/resorts/jamaica/sandals-royal-plantation-ocho-rios/", best_for: ["luxury","butler","honeymoon","special occasions"], tier: "ultra-luxury", overwater: false, butler: true },
-  { id: "ochi", name: "Sandals Ochi", dest: "Jamaica", slug: "/resorts/jamaica/sandals-ochi-beach-resort/", best_for: ["first-timers","budget","entertainment"], tier: "value", overwater: false, butler: true },
-  { id: "dunn-river", name: "Sandals Dunn's River", dest: "Jamaica", slug: "/resorts/jamaica/sandals-dunns-river/", best_for: ["overwater","modern","new experiences"], tier: "premium", overwater: true, butler: true },
-  { id: "negril", name: "Sandals Negril", dest: "Jamaica", slug: "/resorts/jamaica/sandals-negril-beach-resort-and-spa/", best_for: ["beach","sunset","honeymooners","relaxation"], tier: "moderate", overwater: false, butler: true },
-  { id: "south-coast", name: "Sandals South Coast", dest: "Jamaica", slug: "/resorts/jamaica/sandals-south-coast/", best_for: ["overwater","seclusion","snorkeling","privacy"], tier: "luxury", overwater: true, butler: true },
-  { id: "royal-caribbean-r", name: "Sandals Royal Caribbean", dest: "Jamaica", slug: "/resorts/jamaica/sandals-royal-caribbean-resort-and-private-island/", best_for: ["overwater","private island","unique"], tier: "luxury", overwater: true, butler: true },
-  { id: "montego-bay", name: "Sandals Montego Bay", dest: "Jamaica", slug: "/resorts/jamaica/sandals-montego-bay/", best_for: ["first-timers","convenience","short stays"], tier: "value", overwater: false, butler: false },
-  { id: "emerald-bay", name: "Sandals Emerald Bay", dest: "Bahamas", slug: "/resorts/bahamas/sandals-emerald-bay-golf-tennis-and-spa-resort/", best_for: ["golfers","seclusion","water sports"], tier: "premium", overwater: false, butler: true },
-  { id: "royal-bahamian", name: "Sandals Royal Bahamian", dest: "Bahamas", slug: "/resorts/bahamas/sandals-royal-bahamian-resort/", best_for: ["couples","nassau","accessibility"], tier: "moderate", overwater: false, butler: true },
-  { id: "grenada", name: "Sandals Grenada", dest: "Grenada", slug: "/resorts/grenada/sandals-grenada-resort-and-spa/", best_for: ["overwater","seclusion","divers"], tier: "luxury", overwater: true, butler: true },
-  { id: "curacao", name: "Sandals Royal Curaçao", dest: "Curaçao", slug: "/resorts/curacao/sandals-royal-curacao/", best_for: ["unique destination","overwater","off-beaten-path"], tier: "premium", overwater: true, butler: true },
-  { id: "saint-vincent", name: "Sandals Saint Vincent", dest: "Saint Vincent", slug: "/resorts/st-vincent/sandals-saint-vincent/", best_for: ["unique","newest","adventurous couples"], tier: "premium", overwater: true, butler: true },
+  { id: "royal-barbados", name: "Sandals Royal Barbados", dest: "Barbados", slug: "/royal-barbados/", best_for: ["couples","honeymoon","golfers","luxury"], tier: "premium", overwater: false, butler: true },
+  { id: "barbados", name: "Sandals Barbados", dest: "Barbados", slug: "/barbados/", best_for: ["couples","honeymoon","divers"], tier: "moderate", overwater: false, butler: true },
+  { id: "grande-st-lucian", name: "Sandals Grande St. Lucian", dest: "Saint Lucia", slug: "/grande-st-lucian/", best_for: ["honeymoon","anniversary","romance","overwater"], tier: "luxury", overwater: true, butler: true },
+  { id: "halcyon-beach", name: "Sandals Halcyon Beach", dest: "Saint Lucia", slug: "/halcyon-beach/", best_for: ["couples","first-timers","budget"], tier: "value", overwater: false, butler: false },
+  { id: "regency-la-toc", name: "Sandals Regency La Toc", dest: "Saint Lucia", slug: "/regency-la-toc/", best_for: ["couples","golfers","privacy","villas"], tier: "premium", overwater: false, butler: true },
+  { id: "royal-plantation", name: "Sandals Royal Plantation", dest: "Jamaica", slug: "/royal-plantation/", best_for: ["luxury","butler","honeymoon","special occasions"], tier: "ultra-luxury", overwater: false, butler: true },
+  { id: "ochi", name: "Sandals Ochi", dest: "Jamaica", slug: "/ochi/", best_for: ["first-timers","budget","entertainment"], tier: "value", overwater: false, butler: true },
+  { id: "dunn-river", name: "Sandals Dunn's River", dest: "Jamaica", slug: "/dunns-river/", best_for: ["overwater","modern","new experiences"], tier: "premium", overwater: true, butler: true },
+  { id: "negril", name: "Sandals Negril", dest: "Jamaica", slug: "/negril/", best_for: ["beach","sunset","honeymooners","relaxation"], tier: "moderate", overwater: false, butler: true },
+  { id: "south-coast", name: "Sandals South Coast", dest: "Jamaica", slug: "/south-coast/", best_for: ["overwater","seclusion","snorkeling","privacy"], tier: "luxury", overwater: true, butler: true },
+  { id: "royal-caribbean-r", name: "Sandals Royal Caribbean", dest: "Jamaica", slug: "/royal-caribbean/", best_for: ["overwater","private island","unique"], tier: "luxury", overwater: true, butler: true },
+  { id: "montego-bay", name: "Sandals Montego Bay", dest: "Jamaica", slug: "/montego-bay/", best_for: ["first-timers","convenience","short stays"], tier: "value", overwater: false, butler: false },
+  { id: "grande-antigua", name: "Sandals Grande Antigua", dest: "Antigua", slug: "/grande-antigua/", best_for: ["couples","honeymoon","beach","first-timers"], tier: "premium", overwater: false, butler: true },
+  { id: "royal-bahamian", name: "Sandals Royal Bahamian", dest: "Bahamas", slug: "/royal-bahamian/", best_for: ["couples","nassau","accessibility"], tier: "moderate", overwater: false, butler: true },
+  { id: "grenada", name: "Sandals Grenada", dest: "Grenada", slug: "/grenada/", best_for: ["overwater","seclusion","divers"], tier: "luxury", overwater: true, butler: true },
+  { id: "curacao", name: "Sandals Royal Curaçao", dest: "Curaçao", slug: "/royal-curacao/", best_for: ["unique destination","overwater","off-beaten-path"], tier: "premium", overwater: true, butler: true },
+  { id: "saint-vincent", name: "Sandals Saint Vincent", dest: "Saint Vincent", slug: "/saint-vincent/", best_for: ["unique","newest","adventurous couples"], tier: "premium", overwater: true, butler: true },
 ];
+// NOTE: Beaches KEEPS the /resorts/<country>/<name>/ format — unlike Sandals, these do NOT 404. Do not "shorten" them.
 const BEACHES = [
   { id: "turks-caicos", name: "Beaches Turks & Caicos", dest: "Turks & Caicos", slug: "/resorts/turks-caicos/beaches-turks-caicos-resort-villages-and-spa/", best_for: ["families","kids","waterpark"], tier: "luxury", waterpark: true },
   { id: "ocho-rios", name: "Beaches Ocho Rios", dest: "Jamaica", slug: "/resorts/jamaica/beaches-ocho-rios-spa-and-waterpark/", best_for: ["families","jamaica","budget"], tier: "moderate", waterpark: true },
@@ -186,18 +189,21 @@ const tools = {
     if (b) return { resort: b.name, brand: "Beaches", book_url: beach(b.slug), referral: PIXIE.BEACHES_REFERRAL, note: "Same price as direct. Credits Pixie Vacations." };
     return { resort: args.resort_name, not_found: true, book_url: brand==="beaches" ? beach("/") : sand("/"), note: `Resort page not found for "${args.resort_name}". Homepage with referral returned.`, help: PIXIE.QUOTE };
   },
+  // Offer URLs verified live 2026-07-22: Sandals offers = /specials/ , Beaches offers = /deals/ , Beaches suite deals = /specials/suite-deals/.
+  // The old /lp/summer-sale/, /lp/777/ and /offers/ paths all 404 — do not reintroduce them. Deal COPY changes often; lean on the live pages.
   get_sandals_beaches_deals: () => ({
     source: "Pixie Vacations — Sandals & Beaches Platinum Elite",
+    verified: "2026-07-22",
     promotions: [
-      { name: "Sandals Summer Sale", desc: "Up to $1,500 off + $750 air credit. Stays Jun–Sep 2026.", url: sand("/lp/summer-sale/"), all: sand("/offers/") },
-      { name: "Beaches Treasure Beach Offer", desc: "$500 off + $135/child credit.", url: beach("/offers/"), all: beach("/offers/") },
-      { name: "Sandals 777", desc: "7 suites at 7% extra off, updated weekly.", url: sand("/lp/777/"), guide: `${PIXIE.HONEYMOONS}/sandals-777-deals/` },
-      { name: "Beaches 777", desc: "7 family suites at 7% off, updated weekly.", url: beach("/lp/777/"), guide: `${PIXIE.HONEYMOONS}/beaches-777-deals/` },
+      { name: "Sandals — current sale", desc: "Latest Sandals sale (as of Jul 2026: Black Friday in July — up to 65% off + up to $1,650 instant credit + up to $750 air credit + 0% Flex Pay). Terms rotate; the offers page is always current.", url: sand("/specials/"), all: sand("/specials/") },
+      { name: "Beaches — current sale", desc: "Latest Beaches family sale (as of Jul 2026: Black Friday in July — up to 65% off + up to $1,150 credit + up to $750 air credit + 0% Flex Pay). Child/family credits vary by resort.", url: beach("/deals/"), all: beach("/deals/") },
+      { name: "Sandals 777 (weekly suite deal)", desc: "For 7 days, an extra 7% off 7 qualifying rooms/suites on top of current promos. Refreshes weekly.", url: sand("/specials/"), guide: `${PIXIE.HONEYMOONS}/sandals-777-deals/` },
+      { name: "Beaches 777 (weekly suite deal)", desc: "For 7 days, an extra 7% off 7 qualifying family rooms/suites. Refreshes weekly.", url: beach("/specials/suite-deals/"), guide: `${PIXIE.HONEYMOONS}/beaches-777-deals/` },
     ],
-    all_sandals: sand("/offers/"),
-    all_beaches: beach("/offers/"),
+    all_sandals: sand("/specials/"),
+    all_beaches: beach("/deals/"),
     free_quote: PIXIE.QUOTE,
-    note: "All URLs include referral=135752. Same price as direct.",
+    note: "All URLs include referral=135752 (same price as direct). Deal terms change often — confirm specifics on the live offers page; the guide links are Pixie's own always-updated 777 pages.",
   }),
   get_cruise_booking_info: (args={}) => {
     let vendor = null;
