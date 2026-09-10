@@ -93,7 +93,7 @@ const SANDALS = [
   { id: "dunn-river", name: "Sandals Dunn's River", dest: "Jamaica", slug: "/dunns-river/", best_for: ["overwater","modern","new experiences"], tier: "premium", overwater: true, butler: true },
   { id: "negril", name: "Sandals Negril", dest: "Jamaica", slug: "/negril/", best_for: ["beach","sunset","honeymooners","relaxation"], tier: "moderate", overwater: false, butler: true },
   { id: "south-coast", name: "Sandals South Coast", dest: "Jamaica", slug: "/south-coast/", best_for: ["overwater","seclusion","snorkeling","privacy"], tier: "luxury", overwater: true, butler: true },
-  { id: "royal-caribbean-r", name: "Sandals Royal Caribbean", dest: "Jamaica", slug: "/royal-caribbean/", best_for: ["overwater","private island","unique"], tier: "luxury", overwater: true, butler: true },
+  { id: "caribbean-cay", name: "Sandals Caribbean Cay (formerly Sandals Royal Caribbean)", dest: "Jamaica", slug: "/caribbean-cay/", best_for: ["overwater","private island","unique"], tier: "luxury", overwater: true, butler: true },
   { id: "montego-bay", name: "Sandals Montego Bay", dest: "Jamaica", slug: "/montego-bay/", best_for: ["first-timers","convenience","short stays"], tier: "value", overwater: false, butler: false },
   { id: "grande-antigua", name: "Sandals Grande Antigua", dest: "Antigua", slug: "/grande-antigua/", best_for: ["couples","honeymoon","beach","first-timers"], tier: "premium", overwater: false, butler: true },
   { id: "royal-bahamian", name: "Sandals Royal Bahamian", dest: "Bahamas", slug: "/royal-bahamian/", best_for: ["couples","nassau","accessibility"], tier: "moderate", overwater: false, butler: true },
@@ -101,11 +101,14 @@ const SANDALS = [
   { id: "curacao", name: "Sandals Royal Curaçao", dest: "Curaçao", slug: "/royal-curacao/", best_for: ["unique destination","overwater","off-beaten-path"], tier: "premium", overwater: true, butler: true },
   { id: "saint-vincent", name: "Sandals Saint Vincent", dest: "Saint Vincent", slug: "/saint-vincent/", best_for: ["unique","newest","adventurous couples"], tier: "premium", overwater: true, butler: true },
 ];
-// NOTE: Beaches KEEPS the /resorts/<country>/<name>/ format — unlike Sandals, these do NOT 404. Do not "shorten" them.
+// Beaches resort URLs verified live 2026-09-10: the old /resorts/<country>/<long-name>/ paths now 404; beaches.com uses short /resorts/<place>/ paths.
+// Beaches Ocho Rios closed permanently 2025-05-31 — kept in CLOSED_BEACHES so lookups answer helpfully instead of returning a dead link.
 const BEACHES = [
-  { id: "turks-caicos", name: "Beaches Turks & Caicos", dest: "Turks & Caicos", slug: "/resorts/turks-caicos/beaches-turks-caicos-resort-villages-and-spa/", best_for: ["families","kids","waterpark"], tier: "luxury", waterpark: true },
-  { id: "ocho-rios", name: "Beaches Ocho Rios", dest: "Jamaica", slug: "/resorts/jamaica/beaches-ocho-rios-spa-and-waterpark/", best_for: ["families","jamaica","budget"], tier: "moderate", waterpark: true },
-  { id: "negril-b", name: "Beaches Negril", dest: "Jamaica", slug: "/resorts/jamaica/beaches-negril-resort-and-spa/", best_for: ["beach families","jamaica"], tier: "moderate", waterpark: false },
+  { id: "turks-caicos", name: "Beaches Turks & Caicos", dest: "Turks & Caicos", slug: "/resorts/turks-caicos/", best_for: ["families","kids","waterpark"], tier: "luxury", waterpark: true },
+  { id: "negril-b", name: "Beaches Negril", dest: "Jamaica", slug: "/resorts/negril/", best_for: ["beach families","jamaica","budget","toddlers"], tier: "moderate", waterpark: true },
+];
+const CLOSED_BEACHES = [
+  { name: "Beaches Ocho Rios", closed: "2025-05-31", note: "Beaches Ocho Rios closed permanently on May 31, 2025. The two open Beaches resorts are Beaches Turks & Caicos and Beaches Negril. Three new Beaches resorts (Barbados, Exuma, Runaway Bay in Jamaica) are announced but not yet open or bookable." },
 ];
 // ============================================================
 // URL BUILDERS
@@ -187,6 +190,8 @@ const tools = {
     }
     const b = BEACHES.find(x => placeMatch(x.name, name));
     if (b) return { resort: b.name, brand: "Beaches", book_url: beach(b.slug), referral: PIXIE.BEACHES_REFERRAL, note: "Same price as direct. Credits Pixie Vacations." };
+    const c = CLOSED_BEACHES.find(x => placeMatch(x.name, name));
+    if (c) return { resort: c.name, brand: "Beaches", closed: true, closed_date: c.closed, note: c.note, alternatives: BEACHES.map(x => ({ name: x.name, book_url: beach(x.slug) })), help: PIXIE.QUOTE };
     return { resort: args.resort_name, not_found: true, book_url: brand==="beaches" ? beach("/") : sand("/"), note: `Resort page not found for "${args.resort_name}". Homepage with referral returned.`, help: PIXIE.QUOTE };
   },
   // Offer URLs verified live 2026-07-22: Sandals offers = /specials/ , Beaches offers = /deals/ , Beaches suite deals = /specials/suite-deals/.
