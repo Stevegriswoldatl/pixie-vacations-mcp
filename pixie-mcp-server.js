@@ -19,7 +19,12 @@ const PIXIE = {
   SANDALS_BASE: "https://www.sandals.com",
   BEACHES_BASE: "https://www.beaches.com",
   CRUISE_ENGINE: "https://cruise.pixievacations.com",
-  CRUISE_SEARCH: "https://cruise.pixievacations.com/app/0/cruise/0/selection.html",
+  // search_cruises.html?clear=all runs a fresh search. Do NOT link to selection.html: it ignores its
+  // query string and reopens the visitor's previous search (or a blank form). Verified live 2026-10-13.
+  CRUISE_SEARCH: "https://cruise.pixievacations.com/app/0/cruise/0/search_cruises.html?clear=all",
+  // "All lines" = the engine's search form. A results link needs a cruise line (no params -> "select at least
+  // one search parameter"; several vendor ids at once -> "No Sailing Found"). Verified live 2026-10-13.
+  CRUISE_SEARCH_FORM: "https://cruise.pixievacations.com/app/0/cruise/0/search.html?clear=instance",
   CRUISE_RIVER: "https://cruise.pixievacations.com/app/0/river_cruise/0/search_cruises.html",
   CRUISE_PAGE: "https://pixievacations.com/cruise/",
   SITE: "https://www.pixievacations.com",
@@ -115,8 +120,19 @@ const CLOSED_BEACHES = [
 // ============================================================
 const sand = (slug, p={}) => { const base=`${PIXIE.SANDALS_BASE}${slug}`; const all={referral:PIXIE.SANDALS_REFERRAL,...p}; return `${base}?${Object.entries(all).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join("&")}`; };
 const beach = (slug, p={}) => { const base=`${PIXIE.BEACHES_BASE}${slug}`; const all={referral:PIXIE.BEACHES_REFERRAL,...p}; return `${base}?${Object.entries(all).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join("&")}`; };
-const cruiseUrl = (id) => `${PIXIE.CRUISE_SEARCH}?search[vendor_ids][0]=${id}`;
-const riverUrl = (id) => `${PIXIE.CRUISE_RIVER}?clear=all&search%5Bvendor_ids%5D%5B%5D=${id}&search%5Bstart_date%5D=08%2F01%2F2027&search%5Bend_date%5D=12%2F31%2F2027`;
+// No dates on purpose: the engine fills in tomorrow -> +6 months (its max search span) on every click,
+// so these links always show current sailings and never go stale.
+const cruiseUrl = (id) => `${PIXIE.CRUISE_SEARCH}&search%5Bvendor_ids%5D%5B%5D=${id}`;
+// River dates are computed per request so the link never goes stale: the window starts at the Celebrity
+// River launch (Aug 1 2027) until that date passes, then at tomorrow; it spans 6 months, the engine's max.
+const RIVER_LAUNCH = new Date(Date.UTC(2027, 7, 1));
+const mdy = (d) => encodeURIComponent(`${String(d.getUTCMonth()+1).padStart(2,"0")}/${String(d.getUTCDate()).padStart(2,"0")}/${d.getUTCFullYear()}`);
+const riverUrl = (id) => {
+  const tomorrow = new Date(); tomorrow.setUTCHours(0,0,0,0); tomorrow.setUTCDate(tomorrow.getUTCDate()+1);
+  const start = tomorrow > RIVER_LAUNCH ? tomorrow : RIVER_LAUNCH;
+  const end = new Date(start); end.setUTCMonth(end.getUTCMonth()+6);
+  return `${PIXIE.CRUISE_RIVER}?clear=all&search%5Bvendor_ids%5D%5B%5D=${id}&search%5Bstart_date%5D=${mdy(start)}&search%5Bend_date%5D=${mdy(end)}`;
+};
 // Normalize place/resort text so agent spelling variants match the data:
 // "St. Lucia"/"st lucia" ≡ "Saint Lucia", "Turks and Caicos" ≡ "Turks & Caicos", "Curacao" ≡ "Curaçao"
 const normPlace = (s) => (" " + String(s||"").toLowerCase()
@@ -216,7 +232,7 @@ const tools = {
       const key = args.cruise_line.toLowerCase();
       vendor = VENDORS[key] || Object.values(VENDORS).find(v => v.name.toLowerCase().includes(key));
     }
-    const searchUrl = vendor ? (vendor.river ? riverUrl(vendor.id) : cruiseUrl(vendor.id)) : PIXIE.CRUISE_SEARCH;
+    const searchUrl = vendor ? (vendor.river ? riverUrl(vendor.id) : cruiseUrl(vendor.id)) : PIXIE.CRUISE_SEARCH_FORM;
     return {
       booking_engine: PIXIE.CRUISE_ENGINE,
       cruise_page: PIXIE.CRUISE_PAGE,
@@ -228,7 +244,7 @@ const tools = {
         book_url: l.river ? riverUrl(l.id) : cruiseUrl(l.id),
         coming_soon: !!l.river,
       })),
-      search_all: PIXIE.CRUISE_SEARCH,
+      search_all: PIXIE.CRUISE_SEARCH_FORM,
       price_drop_monitoring: true,
       no_fees: true,
       group_bookings: "Group rates, room blocks, cruise weddings, school groups",
@@ -387,7 +403,7 @@ const tools = {
     if (!suggested.length) suggested = ALL_LINES.filter((l) => !l.river);
     return {
       booking_engine: PIXIE.CRUISE_PAGE,
-      search_all: PIXIE.CRUISE_SEARCH,
+      search_all: PIXIE.CRUISE_SEARCH_FORM,
       criteria: { departure_port: args.departure_port || "any", month, passengers: pax, max_total_budget: budget },
       family_note: pax >= 3
         ? "For families: Royal Caribbean (Kids Sail Free on select sailings), Carnival (best value), Disney, and MSC (kids often sail free) are strong picks."
@@ -426,7 +442,7 @@ const TOOL_SCHEMAS = [
   { name: "find_cruise", description: "Find a cruise by departure port, party size, month, and total budget, returning deep links into Pixie Vacations' online cruise booking engine (no fees, same price as the cruise line). Ideal for 'family cruise from Florida under $X' style requests. For Virgin Voyages or river cruises, prefer search_virgin_voyages or get_river_cruise_info.", inputSchema: { type: "object", properties: { departure_port: { type: "string", description: "e.g. Miami, Port Canaveral, Fort Lauderdale, Tampa, Galveston" }, passengers: { type: "number" }, month: { type: "string" }, max_total_budget: { type: "string", description: "total budget for the whole party, e.g. $6000" }, cruise_line: { type: "string" }, destination: { type: "string" } }, required: [] } },
 ];
 
-const SERVER_INFO = { name: "pixie-vacations", version: "1.2.1" };
+const SERVER_INFO = { name: "pixie-vacations", version: "1.2.4" };
 const PROTOCOL_VERSION = "2025-03-26";
 
 function createServer() {
