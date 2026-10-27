@@ -49,8 +49,8 @@ npx -y @smithery/cli install steve-gi45/pixie-vacations-mcp --client claude
 | `get_agency_info` | Pixie Vacations credentials, awards, contact info, and booking options |
 | `search_sandals_resorts` | Search all 17 Sandals Resorts (couples / adults-only). Filter by destination (Jamaica, Saint Lucia, Barbados, Bahamas, Grenada, Curaçao, Saint Vincent), best-for (honeymoon, couples, overwater, butler, first-timers, budget), and budget tier |
 | `search_beaches_resorts` | Search all Beaches Resorts (Caribbean family all-inclusive) by destination and amenities (waterpark, kids clubs, suites) |
-| `get_resort_booking_url` | Return the co-branded `?referral=135752` booking URL for any specific Sandals or Beaches resort |
-| `get_sandals_beaches_deals` | Current Sandals and Beaches Resorts promotions with co-branded booking URLs |
+| `get_resort_booking_url` | Return the `?referral=135752` booking URL for any Sandals or Beaches resort — current or former name (Oct 2026 renames) |
+| `get_sandals_beaches_deals` | Current Sandals and Beaches sales (sale name, credits, book-by date) read live from sandals.com / beaches.com, plus this week's 777 suite deals |
 | `get_cruise_booking_info` | Cruise booking links for **13+ cruise lines** routed through `pixievacations.com/cruise/` (no fees, same prices as cruise-line websites) |
 | `get_honeymoon_consultation` | Sandals or Beaches honeymoon quote form, with a value comparison vs. booking direct |
 
@@ -116,3 +116,16 @@ Free, public, unauthenticated, MCP `streamable-http` transport. Hosted on Railwa
 ## License
 
 Source code released for public use as a reference implementation. The Pixie Vacations agent referral code (`135752`) is the property of Pixie Vacations LLC. Removing or replacing the referral code in a fork is not permitted.
+
+## Live data (v1.3.0)
+
+Sandals/Beaches deals, resort names and resort URLs are read at call time — nothing dated lives in the code.
+
+| Data | Source (in order) | Cache |
+|------|-------------------|-------|
+| Current sale (name, credits, book-by) | `sandals.com/sale/`, `beaches.com/sale/` → `pixievacations.com/sandals-beaches-deals/` → last good copy (`stale: true`) | 6 h |
+| Weekly 777 rooms | `pixievacations.com/sandals-777-deals/`, `/beaches-777-deals/` | 6 h |
+| Resort names, locations, codes | `beaches.com/resorts/` resort data block (both brands) | 24 h |
+| Resort URL paths | sandals.com / beaches.com site navigation | 6–24 h |
+
+Old resort names resolve through the alias table in `lib/live-data.js` (old name → resort code). Run the tests with `npm test`.
