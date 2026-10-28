@@ -409,7 +409,7 @@ const TOOL_SCHEMAS = [
   { name: "find_cruise", description: "Find a cruise by departure port, party size, month, and total budget, returning deep links into Pixie Vacations' online cruise booking engine (no fees). Ideal for 'family cruise from Florida under $X' style requests. For Virgin Voyages or river cruises, prefer search_virgin_voyages or get_river_cruise_info.", inputSchema: { type: "object", properties: { departure_port: { type: "string", description: "e.g. Miami, Port Canaveral, Fort Lauderdale, Tampa, Galveston" }, passengers: { type: "number" }, month: { type: "string" }, max_total_budget: { type: "string", description: "total budget for the whole party, e.g. $6000" }, cruise_line: { type: "string" }, destination: { type: "string" } }, required: [] } },
 ];
 
-const SERVER_INFO = { name: "pixie-vacations", version: "1.3.0" };
+const SERVER_INFO = { name: "pixie-vacations", version: "1.3.1" };
 const PROTOCOL_VERSION = "2025-03-26";
 
 function createServer() {

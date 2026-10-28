@@ -1,7 +1,7 @@
 // Tool handlers end to end with fixture-backed fetch: fallback order, caching, stale flag, copy rules.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { useFixtures, loadServer } from "./helpers.js";
+import { useFixtures, loadServer, fixture, FIXTURE_FOR } from "./helpers.js";
 import { SOURCES } from "../lib/live-data.js";
 import { setFetchImpl } from "../lib/http.js";
 
@@ -133,4 +133,25 @@ test("copy rules hold for every string in every tool response", async () => {
 
 test("copy rules hold for the tool list (descriptions are returned to clients too)", () => {
   checkCopy("tools/list", TOOL_SCHEMAS);
+});
+
+test("a slow 777 page doesn't hold up the reply; it fills in on the next call", async () => {
+  useFixtures();
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  setFetchImpl(async (url) => {
+    if (url === SOURCES.sandals_777) await gate; // pixievacations.com hanging
+    return FIXTURE_FOR[url] ? new Response(fixture(FIXTURE_FOR[url]), { status: 200 }) : new Response("Access Denied", { status: 403 });
+  });
+  const t0 = Date.now();
+  const first = await tools.get_sandals_beaches_deals();
+  assert.ok(Date.now() - t0 < 3500, `reply took ${Date.now() - t0} ms`);
+  assert.equal(first.sandals.sale_name, "The Great Jamaica Comeback Sale");
+  assert.equal(first.promotions[2].this_week.loading, true);
+  assert.equal(first.promotions[3].this_week.rooms.length, 7); // the fast 777 page still made it
+  release();
+  await new Promise((r) => setTimeout(r, 20));
+  const second = await tools.get_sandals_beaches_deals();
+  assert.equal(second.promotions[2].this_week.rooms.length, 7);
+  assert.equal(second.promotions[2].this_week.loading, undefined);
 });
