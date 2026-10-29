@@ -456,8 +456,20 @@ async function main() {
       }
       if (req.method === "POST" && req.url === "/mcp") {
         let body = "";
-        req.on("data", c => { body += c; });
+        let tooLarge = false;
+        req.on("data", c => {
+          if (tooLarge) return;
+          body += c;
+          // Security: cap request size (1 MB) so oversized bodies can't exhaust memory
+          if (body.length > 1_000_000) {
+            tooLarge = true;
+            res.writeHead(413, headers);
+            res.end(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32600, message: "Request too large" } }));
+            req.destroy();
+          }
+        });
         req.on("end", async () => {
+          if (tooLarge) return;
           let msg = null;
           try {
             msg = JSON.parse(body);
