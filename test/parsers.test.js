@@ -94,3 +94,34 @@ test("alias resolution: old names -> current resort; closed resort -> closed", (
   assert.equal(closed.closed.closed, "2025-05-31");
   assert.equal(resolveResort(c, "Sandals Atlantis Moon Base"), null);
 });
+
+// Black Friday 2026 copies (captured 2026-11-05). The campaign name "Black Friday Unlocked" has no sale word,
+// and the air credit appears only in the page body.
+test("beaches.com/sale Black Friday 2026: name from description, $1,650 credit, $750 air, 65% off", () => {
+  const d = parseBrandSale(fixture("beaches-sale-bf26"));
+  assert.equal(d.sale_name, "Black Friday Sale");
+  assert.equal(d.savings_percent, 65);
+  assert.equal(d.instant_credit, 1650);
+  assert.equal(d.air_credit, 750);
+  assert.equal(d.book_by, "2026-12-01");
+});
+
+test("sandals.com/sale Black Friday 2026: name from description, $2,250 credit, $750 air, 65% off", () => {
+  const d = parseBrandSale(fixture("sandals-sale-bf26"));
+  assert.equal(d.sale_name, "Black Friday Sale");
+  assert.equal(d.savings_percent, 65);
+  assert.equal(d.instant_credit, 2250);
+  assert.equal(d.air_credit, 750);
+  assert.equal(d.book_by, "2026-12-01");
+});
+
+test("pixievacations.com deals fallback reads the brand-level 'Live now' line, not one resort's card", () => {
+  const d = parsePixieDeals(fixture("pixie-deals-bf26"));
+  assert.equal(d.beaches.sale_name, "Black Friday Sale");
+  assert.equal(d.beaches.instant_credit, 1650);
+  assert.equal(d.beaches.air_credit, 750);
+  assert.equal(d.beaches.savings_percent, 65);
+  assert.equal(d.beaches.book_by, "2026-12-01");
+  assert.equal(d.sandals.instant_credit, 2250);
+  assert.equal(d.sandals.air_credit, 750);
+});
